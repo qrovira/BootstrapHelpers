@@ -60,8 +60,7 @@ sub _alert {
 
     if ($attrs{dismissable}) {
         $ct //= '';
-        $ct = $self->button( class => "close", "data-dismiss" => "alert", "aria-hidden" => "true", '&times;' );
-        $ct .= $ct;
+        $ct = $self->tag( 'button', type => "button", class => "close", "data-dismiss" => "alert", "aria-hidden" => "true", '×' ).$ct;
         delete $attrs{dismissable};
     }
 
@@ -106,7 +105,7 @@ sub _bs_all_flashes {
     my $content = '';
 
     foreach my $f (@$flashes, @$notifications) {
-        $content .= $self->bs_alert( @$f );
+        $content .= $self->bs_alert( $f->[0], dismissable => 1, $f->[1] );
     }
 
     return Mojo::ByteStream->new($content);
