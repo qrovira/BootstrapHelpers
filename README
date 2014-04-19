@@ -14,12 +14,12 @@ DESCRIPTION
     Bootstrap helpers for Mojolicious.
 
 HELPERS
-  form_group
-      %= form_group 'email' => begin
+  bs_form_group
+      %= bs_form_group 'email' => begin
       %= email_field 'email'
       % end
 
-      %= form_group 'email' => ( label => "e-Mail address" ) => begin
+      %= bs_form_group 'email' => ( label => "e-Mail address" ) => begin
       %= text_field 'email'
       % end
 
@@ -37,6 +37,49 @@ HELPERS
         <label for="email" class="control-label">e-Mail address</label>
         <input name="email"type="email" />
       </div>
+
+  bs_alert
+      %= bs_alert success => "Operation completed"
+      %= bs_alert danger => ( dismissable => 1 ) => begin
+        <span>Something went terribly wrong</span>
+      % end
+
+    Generates a div wrapper with the alert and alert-$class classes.
+
+      <div class="alert alert-success">Operation completed</siv>
+      <div class="alert alert-danger">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <span>Something went terribly wrong</span>
+      </div>
+
+FLASH AND NOTIFICATION HELPERS
+  bs_flash
+      $self->bs_flash( warning => "Beware of the dog" );
+      $self->bs_flash( danger => "The dog is attqacking you!" );
+      $self->bs_flash( success => "The dog killed you!" );
+
+    A stacking flash notification helper, similar to the regular flash. It
+    can be called multiple times, to stack different messages.
+
+  bs_notify
+      $self->bs_notify( warning => "Beware of the dog" );
+      $self->bs_notify( danger => "The dog is attqacking you!" );
+      $self->bs_notify( success => "The dog killed you!" );
+
+    Queues notifications for the user using the stash instead of the
+    session.
+
+  bs_flash_to
+      $self->bs_flash( warning => "Beware of the dog", '/to/some/action' );
+
+    Stacks a flash notification and calls redirect_to(...) with any
+    additional arguments passed to this helper.
+
+  bs_all_flashes
+      <%= b_all_flashes %>
+
+    This method will call the bs_alert helper with each notification found,
+    both on the flashed notifications or the stash ones.
 
 METHODS
     Mojolicious::Plugin::BootstrapHelpers inherits all methods from
