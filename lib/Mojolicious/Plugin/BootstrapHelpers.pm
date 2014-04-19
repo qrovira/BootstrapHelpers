@@ -7,17 +7,48 @@ use Mojo::Util 'xml_escape';
 our $VERSION = '0.01';
 
 sub register {
-  my ($self, $app) = @_;
+    my ($self, $app, $opts) = @_;
 
-  # Tag generators
-  $app->helper( bs_form_group => \&_form_group );
-  $app->helper( bs_alert => \&_alert );
+    # If requested, append this class to the classes with DATA templates (see below)
+    push @{ $app->renderer->classes }, __PACKAGE__
+        if ($opts->{layout});
 
-  # Flash message helpers
-  $app->helper( bs_flash => \&_bs_flash );
-  $app->helper( bs_notify => \&_bs_notify );
-  $app->helper( bs_flash_to => \&_bs_flash_to );
-  $app->helper( bs_all_flashes => \&_bs_all_flashes );
+    # Loader helpers
+    $app->helper( bs_include => \&_cdn_include );
+
+    # Tag generators
+    $app->helper( bs_form_group => \&_form_group );
+    $app->helper( bs_alert => \&_alert );
+
+    # Flash message helpers
+    $app->helper( bs_flash => \&_bs_flash );
+    $app->helper( bs_notify => \&_bs_notify );
+    $app->helper( bs_flash_to => \&_bs_flash_to );
+    $app->helper( bs_all_flashes => \&_bs_all_flashes );
+}
+
+
+sub _cdn_include {
+    my $self = shift;
+    my %args = @_;
+    my $out = '';
+    my $version = $args{version} // '3.1.1';
+    my $jquery_version = $args{jquery_version} // '2.1.0';
+    my $awesome_version = $args{awesome_version} // '4.0.3';
+
+    $out .= $self->stylesheet("//netdna.bootstrapcdn.com/bootstrap/$version/css/bootstrap.min.css")
+        if $args{stylesheet} || $args{all};
+
+    $out .= $self->stylesheet("//netdna.bootstrapcdn.com/font-awesome/$awesome_version/css/font-awesome.min.css")
+        if $args{awesome} || $args{all};
+        
+    $out .= $self->javascript("//ajax.googleapis.com/ajax/libs/jquery/$jquery_version/jquery.min.js")
+        if $args{jquery} || $args{all};
+
+    $out .= $self->javascript("//netdna.bootstrapcdn.com/bootstrap/$version/js/bootstrap.min.js")
+        if $args{javascript} || $args{all};
+
+    return Mojo::ByteStream->new($out);
 }
 
 
@@ -113,7 +144,6 @@ sub _bs_all_flashes {
 
 
 1;
-__END__
 
 =encoding utf8
 
@@ -226,3 +256,36 @@ Register plugin in L<Mojolicious> application.
 L<Mojolicious>, L<Mojolicious::Guides>, L<http://mojolicio.us>.
 
 =cut
+
+__DATA__
+
+@@ layouts/bootstrap.html.ep
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= $title %></title>
+
+    <%= bs_include stylesheet => 1 %>
+    <%= bs_include awesome => 1 %>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <%= content %>
+    </div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <%= bs_include jquery => 1 %>
+    <%= bs_include javascript => 1 %>
+  </body>
+</html>
