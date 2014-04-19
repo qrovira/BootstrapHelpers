@@ -1,0 +1,52 @@
+NAME
+    Mojolicious::Plugin::BootstrapHelpers - Helpers to work with Twitter
+    Bootstrap templates from Mojolicious
+
+SYNOPSIS
+      # Mojolicious
+      $self->plugin('BootstrapHelpers');
+
+      # Mojolicious::Lite
+      plugin 'BootstrapHelpers';
+
+DESCRIPTION
+    Mojolicious::Plugin::BootstrapHelpers is a collection of Twitter
+    Bootstrap helpers for Mojolicious.
+
+HELPERS
+  form_group
+      %= form_group 'email' => begin
+      %= email_field 'email'
+      % end
+
+      %= form_group 'email' => ( label => "e-Mail address" ) => begin
+      %= text_field 'email'
+      % end
+
+    Generate the form-group wrapper for a given field. It will automatically
+    check the specified param name on the validation for errors and add the
+    "has-error" classes as needed.
+
+    You can also provide a "label" attribute to autogenerate it.
+
+      <div class="form-group">
+        <input name="email"type="email" />
+      </div>
+
+      <div class="form-group">
+        <label for="email">e-Mail address</label>
+        <input name="email"type="email" />
+      </div>
+
+METHODS
+    Mojolicious::Plugin::BootstrapHelpers inherits all methods from
+    Mojolicious::Plugin and implements the following new ones.
+
+  register
+      $plugin->register(Mojolicious->new);
+
+    Register plugin in Mojolicious application.
+
+SEE ALSO
+    Mojolicious, Mojolicious::Guides, <http://mojolicio.us>.
+
