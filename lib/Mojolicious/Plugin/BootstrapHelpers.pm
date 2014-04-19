@@ -84,7 +84,7 @@ You can also provide a "label" attribute to autogenerate it.
   </div>
 
   <div class="form-group">
-    <label for="email">e-Mail address</label>
+    <label for="email" class="control-label">e-Mail address</label>
     <input name="email"type="email" />
   </div>
 
