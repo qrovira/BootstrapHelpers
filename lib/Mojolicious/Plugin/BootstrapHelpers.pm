@@ -167,6 +167,21 @@ helpers for L<Mojolicious>.
 
 =head1 HELPERS
 
+=head2 bs_include
+
+  %= bs_include all => 1
+  %= bs_include stylesheet => 1
+  %= bs_include jquery => 1
+  %= bs_include javascript => 1
+  %= bs_include awesome => 1
+
+Include bootstrap or any of the required components using CDN links. Use I<all>
+to load all at once.
+
+You can also provide I<version>, I<jquery_version> or I<awesome_version> options
+to specify which bootstrap, jquery or font awesome versions to link to,
+respectively.
+
 =head2 bs_form_group
 
   %= bs_form_group 'email' => begin
