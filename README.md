@@ -73,20 +73,6 @@ Generates a div wrapper with the alert and alert-$class classes.
       <span>Something went terribly wrong</span>
     </div>
 
-## bs\_nav\_item
-
-    <%= bs_nav_item 'Home' => '/' %>
-    <%= bs_nav_item '-' %>
-    <%= bs_nav_item 'Other' => ( class => "custom" ) => '/other' %>
-
-Generate a list item with a link, for use inside components. The link will
-already have the "active" class set for the current route. Aditional %args
-are provided to both the list and link tags.
-
-    <li class="active"><a href="/">Home</a></li>
-    <li class="separator"></li>
-    <li class="custom"><a href="/other">Other</a></li>
-
 ## bs\_nav
 
     <%= bs_nav( "nav nav-pills" => [ [Home => '/'], ['-'], [Other => '/other'] ] ) %>
@@ -109,6 +95,20 @@ Classes for the list can be provided as a first scalar argument to this helper.
       <li class="separator"></li>
       <li class="custom"><a href="/other">Other</a></li>
     </ul>
+
+## bs\_nav\_item
+
+    <%= bs_nav_item 'Home' => '/' %>
+    <%= bs_nav_item '-' %>
+    <%= bs_nav_item 'Other' => ( class => "custom" ) => '/other' %>
+
+Generate a list item with a link, for use inside components. The link will
+already have the "active" class set for the current route. Aditional %args
+are provided to both the list and link tags.
+
+    <li class="active"><a href="/">Home</a></li>
+    <li class="separator"></li>
+    <li class="custom"><a href="/other">Other</a></li>
 
 # FLASH AND NOTIFICATION HELPERS
 
