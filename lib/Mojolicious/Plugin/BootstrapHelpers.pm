@@ -10,8 +10,10 @@ sub register {
     my ($self, $app, $opts) = @_;
 
     # If requested, append this class to the classes with DATA templates (see below)
-    push @{ $app->renderer->classes }, __PACKAGE__
-        if ($opts->{layout});
+    if ($opts->{layout}) {
+        $app->plugin('PodTemplates');
+        push @{ $app->renderer->classes }, __PACKAGE__;
+    }
 
     # Loader helpers
     $app->helper( bs_include => \&_cdn_include );
@@ -145,6 +147,8 @@ sub _bs_all_flashes {
 
 1;
 
+__END__
+
 =encoding utf8
 
 =head1 NAME
@@ -255,6 +259,43 @@ arguments passed to this helper.
 This method will call the bs_alert helper with each notification found,
 both on the flashed notifications or the stash ones.
 
+=head1 Basic layout templates
+
+=head2 layouts/bootstrap.html.ep
+
+=for template "layouts/bootstrap.html.ep" begin
+
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title><%= $title %></title>
+  
+      <%= bs_include stylesheet => 1 %>
+      <%= bs_include awesome => 1 %>
+  
+      <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+      <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+      <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+      <![endif]-->
+    </head>
+    <body>
+      <div class="container">
+        <%= content %>
+      </div>
+  
+      <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+      <%= bs_include jquery => 1 %>
+      <%= bs_include javascript => 1 %>
+    </body>
+  </html>
+
+=for template "layouts/bootstrap.html.ep" end
+
 =head1 METHODS
 
 L<Mojolicious::Plugin::BootstrapHelpers> inherits all methods from
@@ -271,36 +312,3 @@ Register plugin in L<Mojolicious> application.
 L<Mojolicious>, L<Mojolicious::Guides>, L<http://mojolicio.us>.
 
 =cut
-
-__DATA__
-
-@@ layouts/bootstrap.html.ep
-
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><%= $title %></title>
-
-    <%= bs_include stylesheet => 1 %>
-    <%= bs_include awesome => 1 %>
-
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-  </head>
-  <body>
-    <div class="container">
-      <%= content %>
-    </div>
-
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <%= bs_include jquery => 1 %>
-    <%= bs_include javascript => 1 %>
-  </body>
-</html>
