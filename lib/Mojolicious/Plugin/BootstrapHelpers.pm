@@ -21,6 +21,8 @@ sub register {
     # Tag generators
     $app->helper( bs_form_group => \&_form_group );
     $app->helper( bs_alert => \&_alert );
+    $app->helper( bs_link_item => \&_link_item );
+    $app->helper( bs_link_list => \&_link_list );
 
     # Flash message helpers
     $app->helper( bs_flash => \&_bs_flash );
@@ -29,6 +31,57 @@ sub register {
     $app->helper( bs_all_flashes => \&_bs_all_flashes );
 }
 
+sub _link_item {
+    my $self = shift;
+    my $label = shift;
+
+    return $self->tag( li => ( class => "separator" ) )
+        if $label eq '-';
+
+    my $target = pop;
+    my %attrs = @_;
+
+    # Find target route, compare to current matched endpoint
+    my $found = $self->app->routes->lookup( $target );
+    if( $found && $self->match->endpoint == $found ) {
+        $attrs{class} = $attrs{class} ? "$attrs{class} active" : "active";
+    }
+
+    my $ret;
+    if( ref $label eq 'ARRAY' ) {
+        $ret = $self->tag(
+            li => %attrs,
+            $self->link_to(
+                $label->[0] => sub{ $self->bs_link_list( @{$label->[1]} ) }
+            )
+        );
+    }
+    else {
+        $ret = $self->tag(
+            li => %attrs,
+            sub { $self->link_to( $label => $target ) }
+        );
+    }
+
+    return $ret;
+}
+
+sub _link_list {
+    my $self = shift;
+    my $class = ref($_[0]) ? undef : shift;
+    my $items = shift;
+    my %args = @_;
+    my $ret = '';
+
+    if( $class ) {
+        $args{class} = $args{class} ? "$args{class} $class" : $class;
+    }
+
+    $ret .= $self->bs_link_item( @$_ )
+        foreach( @$items );
+
+    return $self->tag( ul => %args => sub{ $ret } );
+}
 
 sub _cdn_include {
     my $self = shift;
@@ -225,6 +278,37 @@ Generates a div wrapper with the alert and alert-$class classes.
     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
     <span>Something went terribly wrong</span>
   </div>
+
+=head2 bs_link_item
+
+  <%= bs_link_item 'Home' => '/' %>
+  <%= bs_link_item '-' %>
+  <%= bs_link_item 'Other' => ( class => "custom" ) => '/other' %>
+
+Generate a list item with a link, for use inside components. The link will
+already have the "active" class set for the current route. Aditional %args
+are provided to both the list and link tags.
+
+  <li class="active"><a href="/">Home</a></li>
+  <li class="separator"></li>
+  <li class="custom"><a href="/other">Other</a></li>
+
+=head2 bs_link_list
+
+  <%= bs_link_list( "nav nav-pills" => [ [Home => '/'], ['-'], [Other => '/other'] ] ) %>
+  <%= bs_link_list( [ [Home => '/'], ['-'], [Other => '/other'] ] ) %>
+  <%= bs_link_list( [ [Home => '/'], ['-'], [Other => '/other'] ], data-smurf => "something" ) %>
+
+Generate a list of link items as a list. Link items are created by calling
+L</bs_link_item> on each of the passed links.
+
+Classes for the list can be provided as a first scalar argument to this helper.
+
+  <ul>
+    <li class="active"><a href="/">Home</a></li>
+    <li class="separator"></li>
+    <li class="custom"><a href="/other">Other</a></li>
+  </ul>
 
 =head1 FLASH AND NOTIFICATION HELPERS
 
