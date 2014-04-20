@@ -73,11 +73,11 @@ Generates a div wrapper with the alert and alert-$class classes.
       <span>Something went terribly wrong</span>
     </div>
 
-## bs\_link\_item
+## bs\_nav\_item
 
-    <%= bs_link_item 'Home' => '/' %>
-    <%= bs_link_item '-' %>
-    <%= bs_link_item 'Other' => ( class => "custom" ) => '/other' %>
+    <%= bs_nav_item 'Home' => '/' %>
+    <%= bs_nav_item '-' %>
+    <%= bs_nav_item 'Other' => ( class => "custom" ) => '/other' %>
 
 Generate a list item with a link, for use inside components. The link will
 already have the "active" class set for the current route. Aditional %args
@@ -87,14 +87,20 @@ are provided to both the list and link tags.
     <li class="separator"></li>
     <li class="custom"><a href="/other">Other</a></li>
 
-## bs\_link\_list
+## bs\_nav
 
-    <%= bs_link_list( "nav nav-pills" => [ [Home => '/'], ['-'], [Other => '/other'] ] ) %>
-    <%= bs_link_list( [ [Home => '/'], ['-'], [Other => '/other'] ] ) %>
-    <%= bs_link_list( [ [Home => '/'], ['-'], [Other => '/other'] ], data-smurf => "something" ) %>
+    <%= bs_nav( "nav nav-pills" => [ [Home => '/'], ['-'], [Other => '/other'] ] ) %>
+    <%= bs_nav( [ [Home => '/'], ['-'], [Other => '/other'] ] ) %>
+    <%= bs_nav( [ [Home => '/'], ['-'], [Other => '/other'] ], data-smurf => "something" ) %>
+
+    # Or also:
+    %= bs_nav "nav nav-pills" => begin
+    %= bs_nav_item 'Home' => '/';
+    %= bs_nav_item 'Admin' => '/admin';
+    % end
 
 Generate a list of link items as a list. Link items are created by calling
-["bs\_link\_item"](#bs_link_item) on each of the passed links.
+["bs\_nav\_item"](#bs_nav_item) on each of the passed links.
 
 Classes for the list can be provided as a first scalar argument to this helper.
 
