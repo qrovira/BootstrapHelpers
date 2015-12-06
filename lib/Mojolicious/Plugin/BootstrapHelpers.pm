@@ -29,7 +29,7 @@ sub _cdn_include {
     my $self = shift;
     my %args = @_;
     my $out = '';
-    my $version = $args{version} // '3.1.1';
+    my $version = $args{version} // '3.3.6';
     my $jquery_version = $args{jquery_version} // '2.1.0';
     my $awesome_version = $args{awesome_version} // '4.0.3';
 
