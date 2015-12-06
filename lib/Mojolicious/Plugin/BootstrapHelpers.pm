@@ -20,6 +20,10 @@ sub register {
     $app->helper( bs_submit => \&_submit );
     $app->helper( bs_button => \&_button );
 
+    foreach my $type ( qw/ url text email date datetime file month number password range search tel time week color / ) {
+        $app->helper( "bs_${type}_control" => sub {  _control( shift, $type, @_ ); } )
+    }
+
     # Flash message helpers
     $app->helper( bs_flash => \&_bs_flash );
     $app->helper( bs_notify => \&_bs_notify );
@@ -55,12 +59,10 @@ sub _form_group {
     my ($self, $name) = (shift, shift);
 
     my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
-
     my $content = @_ % 2 ? pop : undef;
-
     my %attrs = @_;
 
-    $attrs{class} .= $attrs{class} ? ' form-group' : 'form-group';
+    $attrs{class} = $attrs{class} ? "$attrs{class} form-group" : 'form-group';
 
     if ($self->validation->has_error($name)) {
         $attrs{class} .= ' has-error';
@@ -75,6 +77,17 @@ sub _form_group {
     }
 
     return $self->tag( "div", %attrs, defined($ct) ? sub { $ct } : () );
+}
+
+sub _control {
+    my ($self, $type, $name) = (shift, shift, shift);
+    my $value = @_ % 1 ? shift : undef;
+    my %attrs = @_;
+
+    $attrs{class} = $attrs{class} ? "$attrs{class} form-control" : 'form-control';
+
+    my $helper = $type."_field";
+    return $self->$helper( $name, $value // (), %attrs);
 }
 
 sub _button {
@@ -102,13 +115,9 @@ sub _submit {
 
 sub _alert {
     my ($self, $class) = (shift, shift);
-
     my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
-
     my $content = @_ % 2 ? pop : undef;
-
     my $ct = $cb ? $cb->() : $content ? xml_escape($content) : undef;
-
     my %attrs = @_;
 
     if ($attrs{dismissable}) {
