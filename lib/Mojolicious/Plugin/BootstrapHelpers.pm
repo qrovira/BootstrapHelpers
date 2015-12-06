@@ -17,6 +17,8 @@ sub register {
     $app->helper( bs_alert => \&_alert );
     $app->helper( bs_nav => \&_nav );
     $app->helper( bs_nav_item => \&_nav_item );
+    $app->helper( bs_submit => \&_submit );
+    $app->helper( bs_button => \&_button );
 
     # Flash message helpers
     $app->helper( bs_flash => \&_bs_flash );
@@ -73,6 +75,29 @@ sub _form_group {
     }
 
     return $self->tag( "div", %attrs, defined($ct) ? sub { $ct } : () );
+}
+
+sub _button {
+    my $self = shift;
+    my $label = @_ % 2 ? shift : undef;
+    my %attrs = @_;
+
+    $attrs{class} = $attrs{class} ? "$attrs{class} btn" : 'btn';
+    $attrs{class} .= " btn-default"
+        unless $attrs{class} =~ m#btn-(primary|default|info|warning|danger|link)#;
+
+    return $self->tag( "button", %attrs, $label ? sub { $label } : () );
+}
+
+sub _submit {
+    my $self = shift;
+    my $label = @_ % 2 ? shift : undef;
+    my %attrs = @_;
+
+    $attrs{class} = $attrs{class} ? "$attrs{class} btn-primary" : 'btn-primary'
+        unless $attrs{class} =~ m#btn-(primary|default|info|warning|danger|link)#;
+
+    return $self->bs_button( $label // (), %attrs );
 }
 
 sub _alert {
