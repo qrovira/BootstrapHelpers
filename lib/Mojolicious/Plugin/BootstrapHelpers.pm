@@ -4,7 +4,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::ByteStream;
 use Mojo::Util 'xml_escape';
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 sub register {
     my ($self, $app, $opts) = @_;
@@ -56,27 +56,25 @@ sub _cdn_include {
 
 
 sub _form_group {
-    my ($self, $name) = (shift, shift);
-
-    my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
-    my $content = @_ % 2 ? pop : undef;
-    my %attrs = @_;
+    my ($self, $control, %attrs) = @_;
+    my ($cname, $ctype, @cargs) = ref($control) eq 'ARRAY' ? @$control : ($control, "text");
 
     $attrs{class} = $attrs{class} ? "$attrs{class} form-group" : 'form-group';
 
-    if ($self->validation->has_error($name)) {
+    if ($self->validation->has_error($cname)) {
         $attrs{class} .= ' has-error';
     }
 
-    my $ct = $cb ? $cb->() : $content ? xml_escape($content) : undef;
-
-    if ($attrs{label}) {
-        $ct //= '';
-        $ct = $self->label_for( $name => ( class => 'control-label' ) => sub { $attrs{label} } ) . $ct;
-        delete $attrs{label};
+    my $content = '';
+    if( my $label = delete $attrs{label}) {
+        $content .= $self->label_for(
+            $cname => ( class => 'control-label' ) => sub { $label }
+        );
     }
 
-    return $self->tag( "div", %attrs, defined($ct) ? sub { $ct } : () );
+    $content .= _control($self, $ctype, $cname, @cargs);
+
+    return $self->tag( "div", %attrs, sub { $content } );
 }
 
 sub _control {
@@ -108,7 +106,7 @@ sub _submit {
     my %attrs = @_;
 
     $attrs{class} = $attrs{class} ? "$attrs{class} btn-primary" : 'btn-primary'
-        unless $attrs{class} =~ m#btn-(primary|default|info|warning|danger|link)#;
+        unless $attrs{class} && $attrs{class} =~ m#btn-(primary|default|info|warning|danger|link)#;
 
     return $self->bs_button( $label // (), %attrs );
 }
