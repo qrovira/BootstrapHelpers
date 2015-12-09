@@ -66,13 +66,22 @@ sub _form_group {
     }
 
     my $content = '';
-    if( my $label = delete $attrs{label}) {
+    if( my $label = delete $attrs{label} ) {
         $content .= $self->label_for(
             $cname => ( class => 'control-label' ) => sub { $label }
         );
     }
 
-    $content .= _control($self, $ctype, $cname, @cargs);
+    $content .= _control(
+        $self, $ctype, $cname, @cargs,
+        ( $attrs{help} ? ( 'aria-describedby' => "$cname-aria-desc" ) : () )
+    );
+
+    if( my $help = delete $attrs{help} ) {
+        $content .= $self->tag(
+            span => ( class => "help-block", id => "$cname-aria-desc" ) => sub { $help }
+        );
+    }
 
     return $self->tag( "div", %attrs, sub { $content } );
 }
