@@ -141,36 +141,43 @@ sub _alert {
 sub _nav_item {
     my $self = shift;
     my $label = shift;
-
-    return $self->tag( li => ( class => "separator" ) )
-        if $label eq '-';
-
     my $target = pop;
     my %attrs = @_;
 
-    # Find target route, compare to current matched endpoint
-    my $found = $self->app->routes->lookup( $target );
-    if( $found && $self->match->endpoint == $found ) {
-        $attrs{class} = $attrs{class} ? "$attrs{class} active" : "active";
-    }
+    return $self->tag( li => ( class => "divider", role => "separator" ) )
+        if $label eq '-';
 
-    my $ret;
-    if( ref $label eq 'ARRAY' ) {
-        $ret = $self->tag(
+    # Dropdown
+    if( ref $target eq 'CODE' ) {
+        $attrs{class} = $attrs{class} ? "$attrs{class} dropdown" : "dropdown";
+        return $self->tag(
             li => %attrs,
-            $self->link_to(
-                $label->[0] => sub{ $self->bs_nav( @{$label->[1]} ) }
-            )
+            sub {
+                $self->tag( 'a' => (
+                    href            => '#',
+                    class           => "dropdown-toggle",
+                    "data-toggle"   => "dropdown",
+                    role            => "button",
+                    "aria-haspopup" => "true",
+                    "aria-expanded" => "false",
+                ), sub {
+                    $label." ".$self->tag('span' => ( class => "caret" ) ).
+                    $self->tag( 'ul' => ( class => "dropdown-menu" ) => $target )
+                } );
+            }
         );
     }
     else {
-        $ret = $self->tag(
+        my $found = $self->app->routes->lookup( $target );
+        if( $found && $self->match->endpoint == $found ) {
+            $attrs{class} = $attrs{class} ? "$attrs{class} active" : "active";
+        }
+
+        return $self->tag(
             li => %attrs,
             sub { $self->link_to( $label => $target ) }
         );
     }
-
-    return $ret;
 }
 
 sub _nav {
