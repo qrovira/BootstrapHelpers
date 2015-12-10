@@ -12,11 +12,12 @@ sub register {
     # Loader helpers
     $app->helper( bs_include => \&_cdn_include );
 
-    # Tag generators
-    $app->helper( bs_form_group => \&_form_group );
-    $app->helper( bs_alert => \&_alert );
+    # Nav bars
     $app->helper( bs_nav => \&_nav );
     $app->helper( bs_nav_item => \&_nav_item );
+
+    # Forms
+    $app->helper( bs_form_group => \&_form_group );
     $app->helper( bs_submit => \&_submit );
     $app->helper( bs_button => \&_button );
 
@@ -25,6 +26,7 @@ sub register {
     }
 
     # Flash message helpers
+    $app->helper( bs_alert => \&_alert );
     $app->helper( bs_flash => \&_bs_flash );
     $app->helper( bs_notify => \&_bs_notify );
     $app->helper( bs_flash_to => \&_bs_flash_to );
@@ -54,6 +56,73 @@ sub _cdn_include {
     return Mojo::ByteStream->new($out);
 }
 
+
+sub _nav_item {
+    my $self = shift;
+    my $label = shift;
+    my $target = pop;
+    my %attrs = @_;
+
+    return $self->tag( li => ( class => "divider", role => "separator" ) )
+        if $label eq '-';
+
+    # Dropdown
+    if( ref $target eq 'CODE' ) {
+        $attrs{class} = $attrs{class} ? "$attrs{class} dropdown" : "dropdown";
+        return $self->tag(
+            li => %attrs,
+            sub {
+                $self->tag( 'a' => (
+                    href            => '#',
+                    class           => "dropdown-toggle",
+                    "data-toggle"   => "dropdown",
+                    role            => "button",
+                    "aria-haspopup" => "true",
+                    "aria-expanded" => "false",
+                ), sub {
+                    $label." ".$self->tag('span' => ( class => "caret" ) ).
+                    $self->tag( 'ul' => ( class => "dropdown-menu" ) => $target )
+                } );
+            }
+        );
+    }
+    else {
+        my $found = $self->app->routes->lookup( $target );
+        if( $found && $self->match->endpoint == $found ) {
+            $attrs{class} = $attrs{class} ? "$attrs{class} active" : "active";
+        }
+
+        return $self->tag(
+            li => %attrs,
+            sub { $self->link_to( $label => $target ) }
+        );
+    }
+}
+
+sub _nav {
+    my $self = shift;
+    my $class = ref($_[0]) ? "nav navbar-nav" : shift;
+    my $ret = shift;
+    my %args = @_;
+
+    if( $class ) {
+        $args{class} = $args{class} ? "$args{class} $class" : $class;
+    }
+
+    if( ref $ret eq 'ARRAY' ) {
+        my $items = $ret;
+        $ret = join '', map { $self->bs_nav_item( @$_ ) } @$items;
+    } elsif( ref $ret eq "CODE" ) {
+        $ret = $ret->();
+    }
+
+    return $self->tag( ul => %args => sub { $ret } );
+}
+
+
+#
+# Forms
+#
 
 sub _form_group {
     my ($self, $control, %attrs) = @_;
@@ -120,6 +189,11 @@ sub _submit {
     return $self->bs_button( $label // (), %attrs );
 }
 
+
+#
+# Flash and notification helpers
+#
+
 sub _alert {
     my ($self, $class) = (shift, shift);
     my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
@@ -137,74 +211,6 @@ sub _alert {
 
     return $self->tag( "div", %attrs, defined($ct) ? sub { $ct } : () );
 }
-
-sub _nav_item {
-    my $self = shift;
-    my $label = shift;
-    my $target = pop;
-    my %attrs = @_;
-
-    return $self->tag( li => ( class => "divider", role => "separator" ) )
-        if $label eq '-';
-
-    # Dropdown
-    if( ref $target eq 'CODE' ) {
-        $attrs{class} = $attrs{class} ? "$attrs{class} dropdown" : "dropdown";
-        return $self->tag(
-            li => %attrs,
-            sub {
-                $self->tag( 'a' => (
-                    href            => '#',
-                    class           => "dropdown-toggle",
-                    "data-toggle"   => "dropdown",
-                    role            => "button",
-                    "aria-haspopup" => "true",
-                    "aria-expanded" => "false",
-                ), sub {
-                    $label." ".$self->tag('span' => ( class => "caret" ) ).
-                    $self->tag( 'ul' => ( class => "dropdown-menu" ) => $target )
-                } );
-            }
-        );
-    }
-    else {
-        my $found = $self->app->routes->lookup( $target );
-        if( $found && $self->match->endpoint == $found ) {
-            $attrs{class} = $attrs{class} ? "$attrs{class} active" : "active";
-        }
-
-        return $self->tag(
-            li => %attrs,
-            sub { $self->link_to( $label => $target ) }
-        );
-    }
-}
-
-sub _nav {
-    my $self = shift;
-    my $class = ref($_[0]) ? "nav navbar-nav" : shift;
-    my $ret = shift;
-    my %args = @_;
-
-    if( $class ) {
-        $args{class} = $args{class} ? "$args{class} $class" : $class;
-    }
-
-    if( ref $ret eq 'ARRAY' ) {
-        my $items = $ret;
-        $ret = join '', map { $self->bs_nav_item( @$_ ) } @$items;
-    } elsif( ref $ret eq "CODE" ) {
-        $ret = $ret->();
-    }
-
-    return $self->tag( ul => %args => sub { $ret } );
-}
-
-
-
-#
-# Flash and notification helpers
-#
 
 sub _bs_flash {
     my ($self, $class, $message) = @_;
