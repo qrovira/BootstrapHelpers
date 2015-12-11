@@ -1,9 +1,12 @@
 package Mojolicious::Plugin::BootstrapHelpers;
 use Mojo::Base 'Mojolicious::Plugin';
 
-use Mojo::ByteStream;
+use Mojo::ByteStream qw/ b /;
 use Mojo::Util 'xml_escape';
 
+use List::Util qw/ min /;
+
+use utf8;
 our $VERSION = '0.02';
 
 sub register {
@@ -24,6 +27,9 @@ sub register {
     foreach my $type ( qw/ url text email date datetime file month number password range search tel time week color / ) {
         $app->helper( "bs_${type}_control" => sub {  _control( shift, $type, @_ ); } )
     }
+
+    # Pager
+    $app->helper( bs_pager => \&_pager );
 
     # Flash message helpers
     $app->helper( bs_alert => \&_alert );
@@ -189,6 +195,81 @@ sub _submit {
     return $self->bs_button( $label // (), %attrs );
 }
 
+
+#
+# Pager
+#
+
+sub _pager_link {
+    my ($self, $i, $current) = @_;
+    return $self->tag( li => ( $i == $current ? ( class => "active" ) : () ) => sub {
+        $self->link_to( $i => $self->url_for->query( page => $i ) )
+    } );
+}
+
+sub _pager_ellipsis {
+    my ($self) = @_;
+    return $self->tag( li => ( class => "disabled" ) => sub {
+        $self->tag( a => ( href => '#' ) => '…' )
+    } );
+}
+
+sub _pager {
+    my ($self, $pager, %attrs) = @_;
+    my $n_items = min( delete $attrs{pager_items} // $pager->last_page, $pager->last_page );
+    my $next_prev = delete $attrs{next_prev} // 1;
+    my $sitems = int($n_items / 3); # items on sides, including '…'
+    my $citems = $n_items - 2 * $sitems; # items on central block
+
+    return $self->tag( 'nav' => %attrs => sub {
+        $self->tag( 'ul' => ( class => "pagination" ) => sub {
+            my @done;
+            my $i = 0;
+
+            push @done, _pager_link( $self, ++$i, $pager->current_page )
+                while(@done < $sitems);
+
+            if( $i < $pager->current_page - int($citems/2) ) {
+                push @done, _pager_ellipsis( $self );
+                $i = min( $pager->current_page - int($citems/2), $pager->last_page - $n_items + @done );
+            }
+
+            push @done, _pager_link( $self, ++$i, $pager->current_page )
+                while(@done < $sitems + $citems);
+
+            if( $i < $pager->last_page - $sitems ) {
+                push @done, _pager_ellipsis( $self );
+                $i = $pager->last_page - $sitems + 1;
+            }
+
+            push @done, _pager_link( $self, ++$i, $pager->current_page )
+                while(@done < $n_items);
+
+            my $ret = join "\n", @done;
+
+            if( $next_prev ) {
+                $ret =
+                    $self->tag( li => ( $pager->current_page == $pager->first_page ? ( class => "disabled" ) : () ) => sub {
+                        $self->link_to(
+                            $self->url_for->query( page => $pager->previous_page // $pager->current_page ) =>
+                            ( 'aria-label' => 'Previous' ) =>
+                            sub { $self->tag( span => ( 'aria-hidden' => 'true' ) => b('«') ) }
+                        )
+                    } )
+                    . $ret .
+                    $self->tag( li => ( $pager->current_page == $pager->last_page ? ( class => "disabled" ) : () ) => sub {
+                        $self->link_to(
+                            $self->url_for->query( page => $pager->next_page // $pager->current_page ) =>
+                            ( 'aria-label' => 'Next' ) =>
+                            sub { $self->tag( span => ( 'aria-hidden' => 'true' ) => b('»') ) }
+                        )
+                    } );
+            }
+
+            return $ret;
+        } )
+    } );
+}
 
 #
 # Flash and notification helpers
