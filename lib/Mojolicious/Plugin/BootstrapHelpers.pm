@@ -222,8 +222,6 @@ sub _pagination {
     my $i = $first;
     my $d = int($side + $center/1 + 0.5);
 
-    warn "For: $first,$active,$last,$max..($side,$center,$d)\n";
-
     while( $i <= $last ) {
         push @ret, $i++;
 
@@ -244,8 +242,6 @@ sub _pagination {
             $i = $last - $side - $center;
         }
     }
-
-    warn "Returned @{[ join ',', @ret ]}\n";
 
     return @ret;
 }
