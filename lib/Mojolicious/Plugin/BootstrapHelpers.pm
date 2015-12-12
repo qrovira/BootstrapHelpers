@@ -203,7 +203,7 @@ sub _submit {
 sub _pager_link {
     my ($self, $i, $current) = @_;
     return $self->tag( li => ( $i == $current ? ( class => "active" ) : () ) => sub {
-        $self->link_to( $i => $self->url_for->query( page => $i ) )
+        $self->link_to( $i => $self->url_with->query( page => $i ) )
     } );
 }
 
@@ -214,38 +214,54 @@ sub _pager_ellipsis {
     } );
 }
 
+sub _pagination {
+    my ($first, $active, $last, $max) = @_;
+    my $side = int(($max - 2) / 3);
+    my $center = $max - 2 - 2 * $side;
+    my @ret;
+    my $i = $first;
+    my $d = int($side + $center/1 + 0.5);
+
+    warn "For: $first,$active,$last,$max..($side,$center,$d)\n";
+
+    while( $i <= $last ) {
+        push @ret, $i++;
+
+        next if $max >= $last;
+
+        if( $active >= $first + $d && $active <= $last - $d ) {
+            if( $i == $first + $side && $first + $side != $active - int( $center/2 ) - 1 ) {
+                $i = $active - int( $center/2 );
+            }
+            elsif( $i == $active + int( $center/2 + 0.5 ) && $last - $side != $active + int( $center/2 + 0.5 ) ) {
+                $i = $last - $side + 1;
+            }
+        }
+        elsif( $active < $first + $d && $i == $first + $side + $center + 1) {
+            $i = $last - $side + 1;
+        }
+        elsif( $active > $last - $d && $i == $first + $side ) {
+            $i = $last - $side - $center;
+        }
+    }
+
+    warn "Returned @{[ join ',', @ret ]}\n";
+
+    return @ret;
+}
+
 sub _pager {
     my ($self, $pager, %attrs) = @_;
-    my $n_items = min( delete $attrs{pager_items} // $pager->last_page, $pager->last_page );
     my $next_prev = delete $attrs{next_prev} // 1;
-    my $sitems = int($n_items / 3); # items on sides, including '…'
-    my $citems = $n_items - 2 * $sitems; # items on central block
+    my $num_pages = min( delete $attrs{pager_items} // $pager->last_page, $pager->last_page );
 
     return $self->tag( 'nav' => %attrs => sub {
         $self->tag( 'ul' => ( class => "pagination" ) => sub {
-            my @done;
             my $i = 0;
-
-            push @done, _pager_link( $self, ++$i, $pager->current_page )
-                while(@done < $sitems);
-
-            if( $i < $pager->current_page - int($citems/2) ) {
-                push @done, _pager_ellipsis( $self );
-                $i = min( $pager->current_page - int($citems/2), $pager->last_page - $n_items + @done );
-            }
-
-            push @done, _pager_link( $self, ++$i, $pager->current_page )
-                while(@done < $sitems + $citems);
-
-            if( $i < $pager->last_page - $sitems ) {
-                push @done, _pager_ellipsis( $self );
-                $i = $pager->last_page - $sitems + 1;
-            }
-
-            push @done, _pager_link( $self, ++$i, $pager->current_page )
-                while(@done < $n_items);
-
-            my $ret = join "\n", @done;
+            my $ret = join "\n", map {
+                my $ellip = $i + 1 != $_; $i = $_;
+                ($ellip ? _pager_ellipsis( $self ) : ()), _pager_link( $self, $_, $pager->current_page )
+            } _pagination( $pager->first_page, $pager->current_page, $pager->last_page, $num_pages);
 
             if( $next_prev ) {
                 $ret =
